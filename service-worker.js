@@ -1,19 +1,24 @@
-const CACHE_NAME = 'ai-calc-pwa-v3'; // رفعنا الإصدار للتأكد من التحديث
+// الإصدار الخامس (V5) - لضمان التحديث بعد المحاولات السابقة
+const CACHE_NAME = 'ai-calc-pwa-v5'; 
 
-const urlsToCache = [
-  './', // يشير إلى المجلد الحالي (index.html)
-  'index.html',
-  'style.css',
-  'script.js',
-  'icons/icon-192x192.png',
-  'icons/icon-512x512.png'
+// قائمة الملفات الأساسية للتخزين المؤقت، باستخدام المسار المطلق لـ GitHub Pages
+const APP_SHELL = [
+  // المسار الأساسي للمستودع
+  '/PWA-Calculator/', 
+  // جميع المسارات يجب أن تبدأ بـ /اسم_المستودع/
+  '/PWA-Calculator/index.html',
+  '/PWA-Calculator/style.css',
+  '/PWA-Calculator/script.js',
+  '/PWA-Calculator/icons/icon-192x192.png',
+  '/PWA-Calculator/icons/icon-512x512.png'
 ];
 
+// حدث التثبيت: يتم تخزين جميع الملفات في القائمة
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
-        return cache.addAll(urlsToCache).catch(error => {
+        return cache.addAll(APP_SHELL).catch(error => {
           console.error('فشل في تخزين الأصول مؤقتاً:', error);
         });
       })
@@ -21,6 +26,7 @@ self.addEventListener('install', event => {
   self.skipWaiting();
 });
 
+// حدث الجلب (Fetch): محاولة الرد من الذاكرة المؤقتة أولاً
 self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(event.request)
@@ -30,6 +36,7 @@ self.addEventListener('fetch', event => {
   );
 });
 
+// حدث التفعيل: حذف أي إصدارات قديمة لذاكرة التخزين المؤقت
 self.addEventListener('activate', event => {
   const cacheWhitelist = [CACHE_NAME];
   event.waitUntil(
