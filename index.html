@@ -1,6 +1,6 @@
-<link rel="manifest" href="/Ai-Calculator-full/manifest.json">
+<link rel="manifest" href="manifest.json">
 
-<link rel="apple-touch-icon" href="/Ai-Calculator-full/icons/icon-192x192.png">
+<link rel="apple-touch-icon" href="icons/icon-192x192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="theme-color" content="#00C853">
@@ -8,8 +8,8 @@
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      // تأكد أن المسار صحيح لملف sw.js
-      navigator.serviceWorker.register('/Ai-Calculator-full/sw.js')
+      // مسار ملف sw.js هو الملف ذاته
+      navigator.serviceWorker.register('sw.js')
         .then(registration => {
           console.log('Service Worker registered:', registration.scope);
         })
