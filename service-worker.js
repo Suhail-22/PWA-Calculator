@@ -1,25 +1,41 @@
-// Inlined Service Worker
-const CACHE_NAME = 'ai-calculator-cache-v9'; // قم بتحديث اسم الذاكرة المؤقتة
+// اسم الإصدار لذاكرة التخزين المؤقت - يجب تغييره عند كل تحديث للملفات لفرض التحديث
+const CACHE_NAME = 'ai-calc-pwa-v2';
+
+// الملفات الأساسية التي يجب تخزينها مؤقتاً للعمل دون إنترنت
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/src/index.js',
-  '/styles/index.css',
-  // يمكنك إضافة ملفات أخرى هنا إذا أضفتها لاحقًا
-  // مثل /manifest.json إذا لم تكن تستخدمه مشفرًا
+  '/Ai-Calculator-full/',
+  '/Ai-Calculator-full/index.html',
+  '/Ai-Calculator-full/style.css',
+  '/Ai-Calculator-full/script.js', // تأكد من أن هذا هو اسم ملف JavaScript الرئيسي لديك
+  '/Ai-Calculator-full/icons/icon-192x192.png',
+  '/Ai-Calculator-full/icons/icon-512x512.png'
 ];
 
+// حدث التثبيت: يتم تخزين جميع الملفات في القائمة
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
-        console.log('Opened cache');
-        return cache.addAll(urlsToCache);
+        return cache.addAll(urlsToCache).catch(error => {
+          console.error('فشل في تخزين الأصول مؤقتاً:', error);
+        });
       })
   );
-  event.waitUntil(self.skipWaiting());
+  self.skipWaiting(); // لتفعيل الـ Service Worker فوراً
 });
 
+// حدث الجلب (Fetch): محاولة الرد من الذاكرة المؤقتة أولاً
+self.addEventListener('fetch', event => {
+  event.respondWith(
+    caches.match(event.request)
+      .then(response => {
+        // إذا كان الملف موجوداً في الذاكرة المؤقتة، قم بإرجاعه
+        return response || fetch(event.request);
+      })
+  );
+});
+
+// حدث التفعيل: حذف أي إصدارات قديمة لذاكرة التخزين المؤقت
 self.addEventListener('activate', event => {
   const cacheWhitelist = [CACHE_NAME];
   event.waitUntil(
@@ -31,41 +47,7 @@ self.addEventListener('activate', event => {
           }
         })
       );
-    }).then(() => self.clients.claim())
+    })
   );
-});
-
-self.addEventListener('fetch', event => {
-  // تحقق مما إذا كان الطلب ينتمي إلى نفس الأصل (GitHub Pages)
-  if (event.request.url.startsWith(self.location.origin)) {
-    // إذا كان كذلك، استخدم الذاكرة المؤقتة
-    event.respondWith(
-      caches.match(event.request)
-        .then(response => {
-          // إذا وُجد في الذاكرة المؤقتة، أعد إرساله
-          if (response) {
-            return response;
-          }
-          // إذا لم يُوجد، قم بجلبه من الشبكة
-          return fetch(event.request).then(response => {
-            // تحقق مما إذا كان الاستجابة صالحة
-            if (!response || response.status !== 200 || response.type !== 'basic') {
-              return response;
-            }
-            // انسخ الاستجابة
-            const responseToCache = response.clone();
-            caches.open(CACHE_NAME)
-              .then(cache => {
-                cache.put(event.request, responseToCache);
-              });
-            return response;
-          });
-        })
-    );
-  } else {
-    // إذا كان الطلب لرابط خارجي (مثل cdn.tailwindcss.com)، قم بجلبه مباشرة
-    event.respondWith(
-      fetch(event.request)
-    );
-  }
+  self.clients.claim();
 });
